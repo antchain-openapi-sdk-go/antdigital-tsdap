@@ -3265,8 +3265,6 @@ type AckSwiftOutboundRequest struct {
 	// OAuth模式下的授权token
 	AuthToken         *string `json:"auth_token,omitempty" xml:"auth_token,omitempty"`
 	ProductInstanceId *string `json:"product_instance_id,omitempty" xml:"product_instance_id,omitempty"`
-	// 在claim的时候获得的DAP给报文消息分配的唯一id，32位
-	MessageId *string `json:"message_id,omitempty" xml:"message_id,omitempty" require:"true"`
 	// 本次 ACK/NACK 请求 ID，32位，调用方设置，用于审计和排查
 	RequestId *string `json:"request_id,omitempty" xml:"request_id,omitempty" require:"true"`
 	// 获得确定发送结果的时间，ISO-8601 UTC 字符串
@@ -3292,11 +3290,6 @@ func (s *AckSwiftOutboundRequest) SetAuthToken(v string) *AckSwiftOutboundReques
 
 func (s *AckSwiftOutboundRequest) SetProductInstanceId(v string) *AckSwiftOutboundRequest {
 	s.ProductInstanceId = &v
-	return s
-}
-
-func (s *AckSwiftOutboundRequest) SetMessageId(v string) *AckSwiftOutboundRequest {
-	s.MessageId = &v
 	return s
 }
 
@@ -3327,14 +3320,12 @@ type AckSwiftOutboundResponse struct {
 	ResultCode *string `json:"result_code,omitempty" xml:"result_code,omitempty"`
 	// 异常信息的文本描述
 	ResultMsg *string `json:"result_msg,omitempty" xml:"result_msg,omitempty"`
-	// DAP平台分配的报文消息唯一id，32位
-	MessageId *string `json:"message_id,omitempty" xml:"message_id,omitempty"`
 	// 是否重复发送消息
 	Duplicate *bool `json:"duplicate,omitempty" xml:"duplicate,omitempty"`
 	// DAP平台接收并处理 ACK/NACK 的时间，ISO-8601 UTC 字符串
 	AckedAt *string `json:"acked_at,omitempty" xml:"acked_at,omitempty"`
-	// RECEIVED：回执已保存，包括解析或关联校验失败；CONFLICT：回执已保存，但投递已终态，不覆盖原结果。两种情况均无需重发。
-	ReceiptStatus *string `json:"receipt_status,omitempty" xml:"receipt_status,omitempty"`
+	// 收到回执并已成功持久化，返回true
+	Accepted *bool `json:"accepted,omitempty" xml:"accepted,omitempty"`
 }
 
 func (s AckSwiftOutboundResponse) String() string {
@@ -3360,11 +3351,6 @@ func (s *AckSwiftOutboundResponse) SetResultMsg(v string) *AckSwiftOutboundRespo
 	return s
 }
 
-func (s *AckSwiftOutboundResponse) SetMessageId(v string) *AckSwiftOutboundResponse {
-	s.MessageId = &v
-	return s
-}
-
 func (s *AckSwiftOutboundResponse) SetDuplicate(v bool) *AckSwiftOutboundResponse {
 	s.Duplicate = &v
 	return s
@@ -3375,8 +3361,8 @@ func (s *AckSwiftOutboundResponse) SetAckedAt(v string) *AckSwiftOutboundRespons
 	return s
 }
 
-func (s *AckSwiftOutboundResponse) SetReceiptStatus(v string) *AckSwiftOutboundResponse {
-	s.ReceiptStatus = &v
+func (s *AckSwiftOutboundResponse) SetAccepted(v bool) *AckSwiftOutboundResponse {
+	s.Accepted = &v
 	return s
 }
 
@@ -3601,7 +3587,7 @@ func (client *Client) DoRequest(version *string, action *string, protocol *strin
 				"req_msg_id":       antchainutil.GetNonce(),
 				"access_key":       client.AccessKeyId,
 				"base_sdk_version": tea.String("TeaSDK-2.0"),
-				"sdk_version":      tea.String("1.0.4"),
+				"sdk_version":      tea.String("1.0.5"),
 				"_prod_code":       tea.String("TSDAP"),
 				"_prod_channel":    tea.String("default"),
 			}
